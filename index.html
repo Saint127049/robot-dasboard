@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Control Station</title>
+<style>
+:root{--bg:#0b1017;--panel:#121b26;--panel2:#182432;--line:#263648;--text:#e8eef5;--muted:#8da0b5;--green:#39d98a;--blue:#57a6ff;--amber:#ffbd59;--red:#ff657a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172536 0,#0b1017 50%);color:var(--text);font:15px system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);background:#0d141dcc;position:sticky;top:0;backdrop-filter:blur(12px);z-index:5}
+.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:.08em}.logo{width:36px;height:36px;border:1px solid #35516a;border-radius:10px;display:grid;place-items:center;background:#172839;color:var(--blue)}
+.topstatus{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:6px 10px;color:var(--muted);display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:var(--amber)}.dot.green{background:var(--green);box-shadow:0 0 10px #39d98a66}
+main{max-width:1400px;margin:auto;padding:22px;display:grid;gap:18px;grid-template-columns:minmax(0,1.7fr) minmax(300px,.8fr)}
+.panel{background:linear-gradient(145deg,#121c28,#101720);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 12px 35px #0002}.panelhead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}.panelhead h2{margin:0;font-size:15px;letter-spacing:.03em}.sub{font-size:12px;color:var(--muted)}
+.camera{min-height:360px;background:#05080c;display:flex;align-items:center;justify-content:center;position:relative}.camera img{width:100%;height:100%;max-height:600px;object-fit:contain}.camplaceholder{padding:30px;text-align:center;color:var(--muted)}.camoverlay{position:absolute;left:14px;top:14px;display:flex;gap:8px}.camoverlay span{background:#0009;border:1px solid #ffffff22;padding:6px 9px;border-radius:8px;font-size:11px}.camfooter{padding:14px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.input{background:#0b121a;border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:9px;min-width:190px;flex:1}.btn{border:1px solid var(--line);background:#1b2a3a;color:var(--text);padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}.btn:hover{filter:brightness(1.15)}.btn.primary{background:#155d91;border-color:#267bb6}.btn.stop{background:#6a2532;border-color:#9e384b}.btn:disabled{opacity:.5;cursor:not-allowed}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px}.metric{background:#0d151e;border:1px solid var(--line);border-radius:12px;padding:12px}.metric label{font-size:11px;color:var(--muted)}.metric strong{display:block;font-size:19px;margin-top:5px}.metric small{font-size:11px;color:var(--muted)}
+.side{display:grid;gap:18px;align-content:start}.statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}.statuscard{border:1px solid var(--line);background:#0d151e;border-radius:12px;padding:13px}.statuscard .label{font-size:11px;color:var(--muted)}.statuscard .value{margin-top:6px;font-weight:700}.warn{color:var(--amber)}.good{color:var(--green)}
+.joywrap{padding:18px;display:grid;place-items:center}.joy{width:190px;height:190px;border-radius:50%;border:1px solid #38506a;background:radial-gradient(circle,#1a2b3c 0,#111b26 68%);position:relative;display:grid;place-items:center}.joy:before,.joy:after{content:"";position:absolute;background:#26384a}.joy:before{height:1px;width:100%}.joy:after{width:1px;height:100%}.stick{width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#69b7ff,#216aa8);border:3px solid #8bcaff;box-shadow:0 6px 20px #57a6ff44;z-index:1}.joylabels{position:absolute;inset:0;font-size:10px;color:var(--muted)}.joylabels span{position:absolute}.joylabels .up{top:5px;left:50%;transform:translateX(-50%)}.joylabels .down{bottom:5px;left:50%;transform:translateX(-50%)}.joylabels .left{left:5px;top:50%;transform:translateY(-50%)}.joylabels .right{right:5px;top:50%;transform:translateY(-50%)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}.note{padding:12px 14px;margin:0 14px 14px;background:#251e13;border:1px solid #574225;border-radius:10px;color:#e7c58b;font-size:12px;line-height:1.6}
+.footer{grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:4px}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:12px}.camera{min-height:260px}header{padding:14px}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="logo">◈</div><div>ROBOT <span style="color:var(--blue)">CONTROL</span> STATION</div></div>
+ <div class="topstatus"><div class="pill"><i class="dot" id="camDot"></i><span id="camStatus">CAMERA OFFLINE</span></div><div class="pill"><i class="dot"></i>CONTROL LINK: NOT CONNECTED</div></div>
+</header>
+<main>
+<section class="panel">
+ <div class="panelhead"><h2>LIVE CAMERA</h2><span class="sub">ESP32-CAM · MJPEG STREAM</span></div>
+ <div class="camera"><img id="stream" alt="ESP32-CAM stream" style="display:none"><div class="camplaceholder" id="placeholder"><div style="font-size:42px">▣</div><b>Camera stream not started</b><div class="sub" style="margin-top:8px">ใส่ IP ของ ESP32-CAM แล้วกด Connect Camera</div></div><div class="camoverlay"><span>LIVE</span><span id="resolution">QVGA · 320×240</span></div></div>
+ <div class="camfooter"><input class="input" id="ip" value="10.196.119.29" placeholder="ESP32-CAM IP เช่น 192.168.1.50"><button class="btn primary" id="connect">Connect Camera</button><button class="btn" id="disconnect">Disconnect</button></div>
+ <div class="metrics">
+  <div class="metric"><label>CAMERA STATUS</label><strong id="mCam" class="warn">OFFLINE</strong><small>Stream connection</small></div>
+  <div class="metric"><label>STREAM TYPE</label><strong>MJPEG</strong><small>HTTP stream</small></div>
+  <div class="metric"><label>RESOLUTION</label><strong>QVGA</strong><small>320 × 240</small></div>
+  <div class="metric"><label>CONTROL</label><strong class="warn">DISABLED</strong><small>Hardware not connected</small></div>
+ </div>
+</section>
+<div class="side">
+ <section class="panel">
+  <div class="panelhead"><h2>ROBOT TELEMETRY</h2><span class="sub">DEMO / NOT LIVE</span></div>
+  <div class="statusgrid">
+   <div class="statuscard"><div class="label">BATTERY</div><div class="value warn">-- %</div></div>
+   <div class="statuscard"><div class="label">SIGNAL</div><div class="value warn">-- dBm</div></div>
+   <div class="statuscard"><div class="label">MODE</div><div class="value">MANUAL</div></div>
+   <div class="statuscard"><div class="label">MOTOR STATUS</div><div class="value warn">STOPPED</div></div>
+  </div>
+ </section>
+ <section class="panel">
+  <div class="panelhead"><h2>JOYSTICK</h2><span class="sub">UI PREVIEW</span></div>
+  <div class="joywrap"><div class="joy"><div class="stick"></div><div class="joylabels"><span class="up">FORWARD</span><span class="down">BACK</span><span class="left">LEFT</span><span class="right">RIGHT</span></div></div><div class="sub" style="margin-top:12px">Joystick data not connected</div></div>
+  <div class="controls"><button class="btn" disabled>◀ LEFT</button><button class="btn" disabled>RIGHT ▶</button><button class="btn" disabled>▲ FORWARD</button><button class="btn" disabled>▼ REVERSE</button><button class="btn stop" style="grid-column:1/-1" disabled>EMERGENCY STOP</button></div>
+  <p class="note">ปุ่มควบคุมเป็นเพียงหน้าตา Dashboard เท่านั้น ยังไม่ได้เชื่อมต่อกับระบบขับเคลื่อนจริง จึงปิดการกดไว้เพื่อความปลอดภัย</p>
+ </section>
+</div>
+<div class="footer">Prototype Dashboard · Camera stream only · Robot control and telemetry are not connected yet</div>
+</main>
+<script>
+const img=document.getElementById('stream'), placeholder=document.getElementById('placeholder');
+const statusText=document.getElementById('camStatus'), dot=document.getElementById('camDot'), metric=document.getElementById('mCam');
+function connect(){
+ const ip=document.getElementById('ip').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
+ if(!ip)return;
+ img.src='http://'+ip+':81/stream';
+ img.style.display='block'; placeholder.style.display='none';
+ statusText.textContent='CONNECTING'; metric.textContent='CONNECTING'; metric.className='warn'; dot.className='dot';
+ img.onload=()=>{statusText.textContent='CAMERA CONNECTED';metric.textContent='CONNECTED';metric.className='good';dot.className='dot green'};
+ img.onerror=()=>{statusText.textContent='STREAM ERROR';metric.textContent='ERROR';metric.className='warn';dot.className='dot'};
+}
+function disconnect(){img.src='';img.style.display='none';placeholder.style.display='flex';statusText.textContent='CAMERA OFFLINE';metric.textContent='OFFLINE';metric.className='warn';dot.className='dot'}
+document.getElementById('connect').onclick=connect;document.getElementById('disconnect').onclick=disconnect;
+</script>
+</body>
+</html>
